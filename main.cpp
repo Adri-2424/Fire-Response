@@ -9,7 +9,6 @@
 #include <utility>
 #include <map>
 
-
 struct FireIncident {
     std::string id;
     double latitude;
@@ -26,7 +25,7 @@ std::vector<FireIncident> parseCSV(const std::string& filename) {
     std::vector<FireIncident> incidents;
     std::ifstream file(filename);
     std::string line;
-    std::getline(file, line); // skip header
+    std::getline(file, line);
 
     while (std::getline(file, line)) {
         std::stringstream ss(line);
@@ -40,13 +39,12 @@ std::vector<FireIncident> parseCSV(const std::string& filename) {
             dist = std::stod(token);
         } catch (const std::invalid_argument& e) {
             std::cerr << "Invalid number in DistanceFromBase: '" << token << "'\n";
-            continue; // skip this row
+            continue;
         } catch (const std::out_of_range& e) {
             std::cerr << "Number out of range in DistanceFromBase: '" << token << "'\n";
-            continue; // skip this row
+            continue;
         }
 
-        // Read data columns
         std::getline(ss, id, ',');
         for (int i = 0; i < 6; ++i) std::getline(ss, token, ','); // Skip Hour → Unit
         std::getline(ss, token, ','); lon = std::stod(token);     // Longitude
@@ -98,7 +96,6 @@ public:
 
         if (!node) return best;
 
-        // Calculate distance from user location to current incident
         double dist = std::hypot(lat - node->data.latitude, lon - node->data.longitude);
         if (dist < best.distance)
             best = FireIncident(node->data.id, node->data.latitude, node->data.longitude,
@@ -148,28 +145,24 @@ void benchmark(const std::vector<FireIncident>& data) {
     auto end = std::chrono::high_resolution_clock::now();
     std::cout << "KDTree nearest took "
               << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
-              << " ms\n"; // in milliseconds
+              << " ms\n";
 }
 
 int main() {
-    // Load incidents
     std::string filename = "cleaned_incident_data.csv";
     auto incidents = parseCSV(filename);
 
     std::cout << "Loaded " << incidents.size() << " incidents" << std::endl;
 
-    // Build KDTree
     KDTree kdtree;
     kdtree.build(incidents);
 
-    // User input for coordinates
     double userLat, userLon;
     std::cout << "Enter Latitude of the fire incident: ";
     std::cin >> userLat;
     std::cout << "Enter Longitude of the fire incident: ";
     std::cin >> userLon;
 
-    // Find nearest fire incident
     FireIncident nearestIncident = kdtree.nearest(kdtree.root, userLat, userLon);
     std::cout << "The nearest fire incident to the location (" << userLat << ", " << userLon << ") is:\n"
               << "Incident ID: " << nearestIncident.id << "\n"
@@ -178,7 +171,6 @@ int main() {
 
     std::map<std::string, std::pair<double, double>> unit_coordinates;
 
-    // Populate the map with unit names and coordinates
     unit_coordinates["E7"] = {29.700735771993592, -82.38651442738922};
     unit_coordinates["SQ3"] = {29.665023513467546, -82.29958933643647};
     unit_coordinates["E3"] = {29.66395757157737, -82.30181092608116};
@@ -216,7 +208,6 @@ int main() {
 
     kdtree.findNearestUnit(nearestIncident, unit_coordinates);
 
-    // Add units with coordinates and return a relevant response
     std::cout << "Unit coordinates have been populated." << std::endl;
 
 
