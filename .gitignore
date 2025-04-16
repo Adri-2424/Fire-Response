@@ -1,0 +1,44 @@
+# === OS-specific ===
+.DS_Store
+Thumbs.db
+
+# === Build output ===
+*.exe
+*.out
+*.app
+*.o
+*.obj
+*.so
+*.a
+*.dll
+*.dylib
+
+# === CMake ===
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+build/
+build-*/
+install/
+
+# === CLion ===
+.idea/
+*.iml
+
+# === VS Code ===
+.vscode/
+
+# === Backup/Swap files ===
+*~
+*.swp
+*.swo
+*.bak
+*.tmp
+
+# === Logs ===
+*.log
+
+# === User-specific files ===
+*.user
+*.workspace
