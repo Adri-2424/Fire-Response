@@ -9,6 +9,7 @@
 #include <utility>
 #include <map>
 
+//struct to intialize stuff for parsing for the columsn in the csv
 struct FireIncident {
     std::string id;
     double latitude;
@@ -45,6 +46,7 @@ std::vector<FireIncident> parseCSV(const std::string& filename) {
             continue;
         }
 
+        //parsing columns currently skipping date and time cause we dont need it rn
         std::getline(ss, id, ',');
         for (int i = 0; i < 6; ++i) std::getline(ss, token, ','); // Skip Hour → Unit
         std::getline(ss, token, ','); lon = std::stod(token);     // Longitude
@@ -56,10 +58,11 @@ std::vector<FireIncident> parseCSV(const std::string& filename) {
 
         incidents.emplace_back(id, lat, lon, bLat, bLon, dist);
     }
-
+    //double check if loaded later lmao
     return incidents;
 }
 
+//struct code modified from https://www.baeldung.com/cs/k-d-trees wbesite
 struct KDNode {
     FireIncident data;
     KDNode* left;
@@ -75,6 +78,7 @@ public:
     KDNode* insert(KDNode* node, FireIncident point, int depth = 0) {
         if (!node) return new KDNode(point);
 
+        //axis checks where we are at (x or y) and then moves the daughter nodes accordingly
         int axis = depth % 2;
         if ((axis == 0 && point.latitude < node->data.latitude) ||
             (axis == 1 && point.longitude < node->data.longitude)) {
@@ -86,11 +90,13 @@ public:
         return node;
     }
 
+    //build the tree
     void build(const std::vector<FireIncident>& points) {
         for (const auto& pt : points)
             root = insert(root, pt);
     }
 
+    //nearest neighbor algorithm for calculating closest points
     FireIncident nearest(KDNode* node, double lat, double lon, int depth = 0,
                        FireIncident best = FireIncident("", 0, 0, 0, 0, std::numeric_limits<double>::max())) {
 
@@ -101,6 +107,7 @@ public:
             best = FireIncident(node->data.id, node->data.latitude, node->data.longitude,
                                 node->data.baseLat, node->data.baseLon, dist);
 
+        //axis stuff again because then we know which side of the tree were going down and by which way x or y
         int axis = depth % 2;
         KDNode *next = nullptr, *other = nullptr;
 
@@ -113,6 +120,7 @@ public:
                 other = node->left;
             }
 
+        //save the current best and make sure if the next best is better then replace it for best
         best = nearest(next, lat, lon, depth + 1, best);
         double axis_diff = (axis == 0 ? lat - node->data.latitude : lon - node->data.longitude);
         if (std::abs(axis_diff) < best.distance)
@@ -121,6 +129,7 @@ public:
         return best;
     }
 
+    //find nearest using the distance formula and calculate its nearest point
     void findNearestUnit(const FireIncident& nearestIncident, const std::map<std::string, std::pair<double, double>>& unit_coordinates) {
         std::string closestUnit;
         double minDist = std::numeric_limits<double>::max();
@@ -136,6 +145,7 @@ public:
     }
 };
 
+//ignore for now cause I didnt do a quadtree yet
 void benchmark(const std::vector<FireIncident>& data) {
     KDTree kdtree;
     kdtree.build(data);
@@ -171,6 +181,7 @@ int main() {
 
     std::map<std::string, std::pair<double, double>> unit_coordinates;
 
+    //syntehsized locations of fire units
     unit_coordinates["E7"] = {29.700735771993592, -82.38651442738922};
     unit_coordinates["SQ3"] = {29.665023513467546, -82.29958933643647};
     unit_coordinates["E3"] = {29.66395757157737, -82.30181092608116};
