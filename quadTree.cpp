@@ -17,8 +17,6 @@ struct Point {
 struct Boundary {
     int x, y;
     int xMid, yMid;
-    double width = xMid*2;
-    double height = yMid*2;
 
     // checks if the point is inside the area/tree/map
     bool contains(Point p){
@@ -32,7 +30,6 @@ struct Boundary {
 
         return hypot(dx, dy);
     }
-
 };
 
 class QuadTree {
@@ -91,13 +88,14 @@ public:
     // finds closest response for QT
     Point closest(Point target, double& bestDist, Point bestPoint){
         // go through each point in QT
-        for (const auto& p : points){
+        for (auto& p : points) {
             // find the closest distance between two points using pythagorean theorem
             double dist = hypot(p.x - target.x, p.y - target.y);
-            if (dist < bestDist){       // update bestDistance if there is a smaller distance
+            if (dist < bestDist) {       // update bestDistance if there is a smaller distance
                 bestDist = dist;
                 bestPoint = p;          // update best point as closest match
             }
+        }
 
             // if there are children nodes, check each direction/child
             if (divided){
@@ -112,22 +110,17 @@ public:
                 };
 
                 // sort each direction by distance
-                sort(directions.begin(), directions.end(), [](pair<QuadTree*, double>& a, pair<QuadTree*, double>& b){return a.second < b.second;});
+                sort(directions.begin(), directions.end(), [](pair<QuadTree*, double>& a, pair<QuadTree*, double>& b){
+                    return a.second < b.second;});
 
                 // iterate through each direction, if smaller go find closest
-                for (auto i=0; i < directions.size(); i++){
-                    QuadTree* child = directions[i].first;
-                    double distance = directions[i].second;
-
+                for (auto [child, distance] : directions){
                     if (distance < bestDist){
                         bestPoint = child->closest(target, bestDist, bestPoint);
                     }
                 }
-
             }
-
-            return bestPoint;
-        }
+        return bestPoint;
     }
 
     void print(string prefix = ""){
@@ -151,6 +144,3 @@ public:
     }
 };
 
-Point toQuadPoint(double latitude, double longitude){
-    return {static_cast<int>(latitude*10000), static_cast<int>(longitude*10000)};
-}

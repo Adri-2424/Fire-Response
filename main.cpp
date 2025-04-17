@@ -8,8 +8,9 @@
 #include <chrono>
 #include <utility>
 #include <map>
+#include "quadTree.cpp"
 
-//struct to intialize stuff for parsing for the columsn in the csv
+//struct to intialize stuff for parsing for the columns in the csv
 struct FireIncident {
     std::string id;
     double latitude;
@@ -145,6 +146,10 @@ public:
     }
 };
 
+Point toQuadPoint(double latitude, double longitude){
+    return Point{static_cast<int>(latitude*10000), static_cast<int>(longitude*10000)};
+}
+
 //ignore for now cause I didnt do a quadtree yet
 void benchmark(const std::vector<FireIncident>& data) {
     KDTree kdtree;
@@ -156,6 +161,28 @@ void benchmark(const std::vector<FireIncident>& data) {
     std::cout << "KDTree nearest took "
               << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
               << " ms\n";
+
+    //QuadTree
+    Boundary boundary = {0, 0, 1000000, 1000000};
+    QuadTree qt(boundary);
+
+    for (auto incident : data){
+        qt.insert(toQuadPoint(incident.latitude, incident.longitude));
+    }
+
+    Point target = toQuadPoint(29.7, -82.3);
+    double bestDist = numeric_limits<double>::max();
+
+    auto startQT  = chrono::high_resolution_clock::now();
+
+    Point close = qt.closest(target, bestDist, {0,0});
+
+    auto endQT  = chrono::high_resolution_clock::now();
+
+    cout << "QuadTree nearest took " << chrono::duration_cast<chrono::microseconds>(endQT - startQT).count() << " ms\n";
+
+    //if wanted to print the closest point
+    // cout << "QuadTree closest point: (" << close.x << ", " << close.y << ")\n";
 }
 
 int main() {
@@ -220,6 +247,8 @@ int main() {
     kdtree.findNearestUnit(nearestIncident, unit_coordinates);
 
     std::cout << "Unit coordinates have been populated." << std::endl;
+
+    benchmark(incidents);
 
 
     return 0;
