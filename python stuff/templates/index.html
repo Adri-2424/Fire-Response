@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Fire Incident Map</title>
+
+  <link rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  
+  <link rel="stylesheet"
+        href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+
+  <style>
+    body { margin: 0; padding: 0; }
+    #map { height: 90vh; }
+    #controls { padding: 8px; }
+  </style>
+</head>
+
+<body>
+  <div id="controls">
+    Lat: <input id="lat" type="number" step="any" value="29.7">
+    Lon: <input id="lon" type="number" step="any" value="-82.3">
+    Radius (km): <input id="radius" type="number" value="5">
+    <button onclick="runQuery()">Query</button>
+  </div>
+
+  <div id="map"></div>
+
+
+  <script src="{{ url_for('static', filename='map.js') }}"></script>
+</body>
+</html>

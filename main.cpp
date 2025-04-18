@@ -281,6 +281,5 @@ int main() {
     kdtree.findNearestUnit(nearestIncident, unit_coordinates);
 
 
-
     return 0;
 }
