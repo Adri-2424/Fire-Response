@@ -8,6 +8,7 @@
 #include <chrono>
 #include <utility>
 #include <map>
+#include <iomanip>
 #include "quadTree.cpp"
 
 //struct to intialize stuff for parsing for the columns in the csv
@@ -184,7 +185,16 @@ void benchmark(const std::vector<FireIncident>& data) {
     //if wanted to print the closest point
     // cout << "QuadTree closest point: (" << close.x << ", " << close.y << ")\n";
 }
+// for finding the coordinance to the are with the highest incedent rate
+void getHigherIncedents(){
+    // not sure how your function output will look so i just put a generic lat and longitude 
+    
+    double lat = 0;
+    double lon = 0;
 
+    cout << "Coordinates with highest incedent rate: " << setprecision(3) <<  lat << ", " << setprecision(3) << lon << endl;
+
+}
 int main() {
     std::string filename = "cleaned_incident_data.csv";
     auto incidents = parseCSV(filename);
@@ -250,6 +260,7 @@ int main() {
 
     benchmark(incidents);
 
+    getHigherIncedents();
 
     return 0;
 }
