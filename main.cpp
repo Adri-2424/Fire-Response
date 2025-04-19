@@ -153,6 +153,8 @@ Point toQuadPoint(double latitude, double longitude){
 
 //ignore for now cause I didnt do a quadtree yet
 void benchmark(const std::vector<FireIncident>& data) {
+    cout << "To find the nearest unit: " << endl;
+
     KDTree kdtree;
     kdtree.build(data);
 
@@ -276,8 +278,10 @@ int main() {
 
     std::cout << "Unit coordinates have been populated." << std::endl;
 
+    // comparison
     benchmark(incidents);
 
+    // Extra EMS Response
     int incidentThreshold = 0;
     cout << "Please input a threshold for incidents: " << endl;
     cin >> incidentThreshold;
