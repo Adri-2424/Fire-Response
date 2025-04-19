@@ -185,16 +185,34 @@ void benchmark(const std::vector<FireIncident>& data) {
     //if wanted to print the closest point
     // cout << "QuadTree closest point: (" << close.x << ", " << close.y << ")\n";
 }
-// for finding the coordinance to the are with the highest incedent rate
-void getHigherIncedents(){
-    // not sure how your function output will look so i just put a generic lat and longitude 
-    
-    double lat = 0;
-    double lon = 0;
+// for finding the coordinates to the areas with the highest incident rate
+void getHigherIncidents(vector<FireIncident> incidents, int incidentThreshold){
+    if (incidentThreshold <= 0){
+        cout << "Invalid threshold, must be greater than 0" << endl;
+        return;
+    }
 
-    cout << "Coordinates with highest incedent rate: " << setprecision(3) <<  lat << ", " << setprecision(3) << lon << endl;
+    // if there is an incident, add the location coordinates & iterate count of incidents
+    map<pair<int, int>, int> regionCountMap;
+    for (auto incident : incidents){
+        int lat = static_cast<int>(incident.latitude * 100);
+        int lon = static_cast<int>(incident.longitude * 100);
+        regionCountMap[{lat, lon}]++;
+    }
 
+    // print out high incident areas
+    cout << "High Incident Areas: " << endl;
+    for (auto region : regionCountMap){
+        int EMSIncidents = region.second;
+        if (EMSIncidents >= incidentThreshold){
+            int EMSResponse = static_cast<int>(ceil(static_cast<double>(EMSIncidents) / incidentThreshold));
+            cout << "(" << region.first.first / 100.0 << ", ";
+            cout << region.first.second / 100.0 << ")" << endl;
+            cout << EMSResponse << " more EMS Units on standby" << endl;
+        }
+    }
 }
+
 int main() {
     std::string filename = "cleaned_incident_data.csv";
     auto incidents = parseCSV(filename);
@@ -260,7 +278,11 @@ int main() {
 
     benchmark(incidents);
 
-    getHigherIncedents();
+    int incidentThreshold = 0;
+    cout << "Please input a threshold for incidents: " << endl;
+    cin >> incidentThreshold;
+
+    getHigherIncidents(incidents, incidentThreshold);
 
     return 0;
 }
