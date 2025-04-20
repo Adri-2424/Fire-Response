@@ -8,15 +8,15 @@
         href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-  
   <link rel="stylesheet"
         href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
   <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 
   <style>
-    body { margin: 0; padding: 0; }
-    #map { height: 90vh; }
-    #controls { padding: 8px; }
+    body { margin: 0; font-family: system-ui, sans-serif; }
+    #map { height: 88vh; }
+    #controls { padding: 10px 8px; background: #fafafa; box-shadow: 0 2px 4px #0001; }
+    #info { white-space: pre; font-family: monospace; font-size: 0.8rem; padding: 6px 8px; }
   </style>
 </head>
 
@@ -24,13 +24,14 @@
   <div id="controls">
     Lat: <input id="lat" type="number" step="any" value="29.7">
     Lon: <input id="lon" type="number" step="any" value="-82.3">
-    Radius (km): <input id="radius" type="number" value="5">
+    Radius&nbsp;(km): <input id="radius" type="number" step="any" value="5">
     <button onclick="runQuery()">Query</button>
   </div>
 
   <div id="map"></div>
+  <pre id="info">← hit “Query” to see details here</pre>
 
-
+  <!-- static file served by Flask -->
   <script src="{{ url_for('static', filename='map.js') }}"></script>
 </body>
 </html>
