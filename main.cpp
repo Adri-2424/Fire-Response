@@ -8,19 +8,20 @@
 #include <chrono>
 #include <utility>
 #include <map>
+#include <iomanip>
+#include "quadTree.cpp"
 
-//struct to intialize stuff for parsing for the columsn in the csv
+//struct to intialize stuff for parsing for the columns in the csv
 struct FireIncident {
-    std::string Incident;
-    std::string Unit;
+    std::string id;
     double latitude;
     double longitude;
     double baseLat;
     double baseLon;
     double distance;
 
-    FireIncident(std::string Incident, double lat, double lon, double bLat, double bLon, double dist)
-        : Incident(Incident), latitude(lat), longitude(lon), baseLat(bLat), baseLon(bLon), distance(dist) {}
+    FireIncident(const std::string& id_, double lat, double lon, double bLat, double bLon, double dist)
+        : id(id_), latitude(lat), longitude(lon), baseLat(bLat), baseLon(bLon), distance(dist) {}
 };
 
 std::vector<FireIncident> parseCSV(const std::string& filename) {
@@ -34,7 +35,6 @@ std::vector<FireIncident> parseCSV(const std::string& filename) {
         std::string token;
 
         std::string id;
-        std::string unit;
         double lat, lon, bLat, bLon, dist;
 
         std::getline(ss, token, ',');
@@ -48,27 +48,17 @@ std::vector<FireIncident> parseCSV(const std::string& filename) {
             continue;
         }
 
+        //parsing columns currently skipping date and time cause we dont need it rn
         std::getline(ss, id, ',');
-        std::getline(ss, unit, ',');
-
-        //parsing columns currently skipping date and time cause we dont need it rn had to update for range query stuff
-        //turns out we need unit lmaoooooo
-        for (int i = 0; i < 5; ++i) std::getline(ss, token, ',');
-        std::getline(ss, token, ',');
-        lon = std::stod(token);
-        std::getline(ss, token, ',');
-        lat = std::stod(token);
-        for(int i = 0; i < 2; ++i) std::getline(ss, token, ',');
-        for (int i = 0; i < 2; ++i) std::getline(ss, token, ',');
-        std::getline(ss, token, ',');
-        bLat = std::stod(token);
-        std::getline(ss, token, ',');
-        bLon = std::stod(token);
-        std::getline(ss, token, ',');
-        dist = std::stod(token);
+        for (int i = 0; i < 6; ++i) std::getline(ss, token, ','); // Skip Hour → Unit
+        std::getline(ss, token, ','); lon = std::stod(token);     // Longitude
+        std::getline(ss, token, ','); lat = std::stod(token);     // Latitude
+        for (int i = 0; i < 2; ++i) std::getline(ss, token, ','); // Skip Date, Time
+        std::getline(ss, token, ','); bLat = std::stod(token);    // BaseLatitude
+        std::getline(ss, token, ','); bLon = std::stod(token);    // BaseLongitude
+        std::getline(ss, token, ','); dist = std::stod(token);    // DistanceFromBase
 
         incidents.emplace_back(id, lat, lon, bLat, bLon, dist);
-        incidents.back().Unit = unit;
     }
     //double check if loaded later lmao
     return incidents;
@@ -86,6 +76,7 @@ struct KDNode {
 class KDTree {
 public:
     KDNode* root = nullptr;
+
     KDNode* insert(KDNode* node, FireIncident point, int depth = 0) {
         if (!node) return new KDNode(point);
 
@@ -115,8 +106,8 @@ public:
 
         double dist = std::hypot(lat - node->data.latitude, lon - node->data.longitude);
         if (dist < best.distance)
-            best = FireIncident(node->data.Incident, node->data.latitude, node->data.longitude,
-                                 node->data.baseLat, node->data.baseLon, dist);
+            best = FireIncident(node->data.id, node->data.latitude, node->data.longitude,
+                                node->data.baseLat, node->data.baseLon, dist);
 
         //axis stuff again because then we know which side of the tree were going down and by which way x or y
         int axis = depth % 2;
@@ -154,47 +145,16 @@ public:
 
         std::cout << "The nearest unit likely to respond is: " << closestUnit << "\n";
     }
-
-    //Kind of adapted from search theory psuedocode via https://pcl.readthedocs.io/projects/tutorials/en/master/kdtree_search.html
-    //helper kinda like AVL tree cause we need to pass in coordinates + vector + nodes
-    void rangeQueryHelper(KDNode* node, double x, double y, double radius,int depth, std::vector<FireIncident>& results) {
-        if (!node) return;
-
-        //calculate diffe in latitude and longitude from our search point to the current nod
-        double dx = node->data.latitude - x;
-        double dy = node->data.longitude - y;
-        double distance = std::hypot(dx, dy);
-
-
-        //if dist is within given radius then add to result list
-        if (distance <= radius) {
-            results.push_back(node->data);
-        }
-
-        //swithc which axis we compare based on level (aka x or y stuff)
-        int axis = depth % 2;
-        double diff = (axis == 0) ? dx : dy;
-
-        //if diff is greater left tree has the points if less right one does yay recursion
-        if (diff > -radius) {
-            rangeQueryHelper(node->left, x, y, radius, depth + 1, results);
-        }
-        if (diff < radius) {
-            rangeQueryHelper(node->right, x, y, radius, depth + 1, results);
-        }
-    }
-
-    //just plugs into helper anad then returns the result vector to be iterated through in main
-    std::vector<FireIncident> rangeQuery(double x, double y, double radius) {
-        std::vector<FireIncident> results;
-        rangeQueryHelper(root, x, y, radius, 0, results);
-        return results;
-    }
-
 };
+
+Point toQuadPoint(double latitude, double longitude){
+    return Point{static_cast<int>(latitude*10000), static_cast<int>(longitude*10000)};
+}
 
 //ignore for now cause I didnt do a quadtree yet
 void benchmark(const std::vector<FireIncident>& data) {
+    cout << "To find the nearest unit: " << endl;
+
     KDTree kdtree;
     kdtree.build(data);
 
@@ -204,6 +164,55 @@ void benchmark(const std::vector<FireIncident>& data) {
     std::cout << "KDTree nearest took "
               << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
               << " ms\n";
+
+    //QuadTree
+    Boundary boundary = {0, 0, 1000000, 1000000};
+    QuadTree qt(boundary);
+
+    for (auto incident : data){
+        qt.insert(toQuadPoint(incident.latitude, incident.longitude));
+    }
+
+    Point target = toQuadPoint(29.7, -82.3);
+    double bestDist = numeric_limits<double>::max();
+
+    auto startQT  = chrono::high_resolution_clock::now();
+
+    Point close = qt.closest(target, bestDist, {0,0});
+
+    auto endQT  = chrono::high_resolution_clock::now();
+
+    cout << "QuadTree nearest took " << chrono::duration_cast<chrono::microseconds>(endQT - startQT).count() << " ms\n";
+
+    //if wanted to print the closest point
+    // cout << "QuadTree closest point: (" << close.x << ", " << close.y << ")\n";
+}
+// for finding the coordinates to the areas with the highest incident rate
+void getHigherIncidents(vector<FireIncident> incidents, int incidentThreshold){
+    if (incidentThreshold <= 0){
+        cout << "Invalid threshold, must be greater than 0" << endl;
+        return;
+    }
+
+    // if there is an incident, add the location coordinates & iterate count of incidents
+    map<pair<int, int>, int> regionCountMap;
+    for (auto incident : incidents){
+        int lat = static_cast<int>(incident.latitude * 100);
+        int lon = static_cast<int>(incident.longitude * 100);
+        regionCountMap[{lat, lon}]++;
+    }
+
+    // print out high incident areas
+    cout << "High Incident Areas: " << endl;
+    for (auto region : regionCountMap){
+        int EMSIncidents = region.second;
+        if (EMSIncidents >= incidentThreshold){
+            int EMSResponse = static_cast<int>(ceil(static_cast<double>(EMSIncidents) / incidentThreshold));
+            cout << "(" << region.first.first / 100.0 << ", ";
+            cout << region.first.second / 100.0 << ")" << endl;
+            cout << EMSResponse << " more EMS Units on standby" << endl;
+        }
+    }
 }
 
 int main() {
@@ -216,29 +225,16 @@ int main() {
     kdtree.build(incidents);
 
     double userLat, userLon;
-    int radius;
     std::cout << "Enter Latitude of the fire incident: ";
     std::cin >> userLat;
     std::cout << "Enter Longitude of the fire incident: ";
     std::cin >> userLon;
-    std::cout << "Enter radius of Point ";
-    std::cin >> radius;
 
     FireIncident nearestIncident = kdtree.nearest(kdtree.root, userLat, userLon);
     std::cout << "The nearest fire incident to the location (" << userLat << ", " << userLon << ") is:\n"
+              << "Incident ID: " << nearestIncident.id << "\n"
               << "Location: (" << nearestIncident.latitude << ", " << nearestIncident.longitude << ")\n"
               << "Distance from base: " << nearestIncident.distance << " km\n";
-
-    //range query stuff iterates through results of closest number of incidents for a radius
-    auto incidentsInRange = kdtree.rangeQuery(userLat, userLon, radius);
-    std::cout << "\nFire incidents within " << radius << " km radius of ("
-              << userLat << ", " << userLon << "): " << incidentsInRange.size() << "\n";
-    for (const auto& incident : incidentsInRange) {
-        std::cout<< ", Location: (" << incident.latitude << ", " << incident.longitude << ")"
-                  << ", Unit: " << incident.Unit
-                  << ", Type: " << incident.Incident
-                  << ", Distance from base: " << incident.distance << " km\n";
-    }
 
     std::map<std::string, std::pair<double, double>> unit_coordinates;
 
@@ -280,6 +276,17 @@ int main() {
 
     kdtree.findNearestUnit(nearestIncident, unit_coordinates);
 
+    std::cout << "Unit coordinates have been populated." << std::endl;
+
+    // comparison
+    benchmark(incidents);
+
+    // Extra EMS Response
+    int incidentThreshold = 0;
+    cout << "Please input a threshold for incidents: " << endl;
+    cin >> incidentThreshold;
+
+    getHigherIncidents(incidents, incidentThreshold);
 
     return 0;
 }
