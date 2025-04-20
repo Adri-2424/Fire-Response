@@ -151,42 +151,88 @@ Point toQuadPoint(double latitude, double longitude){
     return Point{static_cast<int>(latitude*10000), static_cast<int>(longitude*10000)};
 }
 
-//ignore for now cause I didnt do a quadtree yet
+//quadtree stuff added now
 void benchmark(const std::vector<FireIncident>& data) {
-    cout << "To find the nearest unit: " << endl;
+    using Clock = std::chrono::high_resolution_clock;
 
+    std::cout << "\n--- Benchmarking KD‑Tree vs QuadTree ---\n";
+
+    //KD‑Tree stuff
     KDTree kdtree;
+
+    // Build time (μs)
+    auto kd_build_start = Clock::now();
     kdtree.build(data);
+    auto kd_build_end = Clock::now();
+    auto kd_build_us = std::chrono::duration_cast<std::chrono::microseconds>(
+                          kd_build_end - kd_build_start
+                       ).count();
+    std::cout << "KDTree build took " << kd_build_us << " us\n";
 
-    auto start = std::chrono::high_resolution_clock::now();
-    auto result = kdtree.nearest(kdtree.root, 29.7, -82.3);
-    auto end = std::chrono::high_resolution_clock::now();
-    std::cout << "KDTree nearest took "
-              << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
-              << " ms\n";
+    //Single query time (ns)
+    auto kd_q_start = Clock::now();
+    auto kd_res = kdtree.nearest(kdtree.root, 29.7, -82.3);
+    auto kd_q_end = Clock::now();
+    auto kd_q_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
+                       kd_q_end - kd_q_start
+                   ).count();
+    std::cout << "KDTree single nearest query took " << kd_q_ns << " ns\n";
 
-    //QuadTree
+    //Average query time over many runs (microsecnds (μs)
+    const int KD_RUNS = 1000;
+    auto kd_loop_start = Clock::now();
+    for (int i = 0; i < KD_RUNS; ++i) {
+        kdtree.nearest(kdtree.root, 29.7, -82.3);
+    }
+    auto kd_loop_end = Clock::now();
+    auto kd_avg_us = std::chrono::duration_cast<std::chrono::microseconds>(
+                         kd_loop_end - kd_loop_start
+                     ).count() / KD_RUNS;
+    std::cout << "KDTree avg nearest query over "
+              << KD_RUNS << " runs: "
+              << kd_avg_us << " us\n\n";
+
+    //QuadTree stuff
     Boundary boundary = {0, 0, 1000000, 1000000};
     QuadTree qt(boundary);
 
-    for (auto incident : data){
-        qt.insert(toQuadPoint(incident.latitude, incident.longitude));
+    //Build time (μs)
+    auto qt_build_start = Clock::now();
+    for (const auto& inc : data) {
+        qt.insert(toQuadPoint(inc.latitude, inc.longitude));
     }
+    auto qt_build_end = Clock::now();
+    auto qt_build_us = std::chrono::duration_cast<std::chrono::microseconds>(
+                          qt_build_end - qt_build_start
+                       ).count();
+    std::cout << "QuadTree build took " << qt_build_us << " us\n";
 
+    //Single query time (ns)
     Point target = toQuadPoint(29.7, -82.3);
-    double bestDist = numeric_limits<double>::max();
+    double bestDist = std::numeric_limits<double>::max();
+    auto qt_q_start = Clock::now();
+    Point qt_closest = qt.closest(target, bestDist, {0,0});
+    auto qt_q_end = Clock::now();
+    auto qt_q_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
+                       qt_q_end - qt_q_start
+                   ).count();
+    std::cout << "QuadTree single nearest query took " << qt_q_ns << " ns\n";
 
-    auto startQT  = chrono::high_resolution_clock::now();
-
-    Point close = qt.closest(target, bestDist, {0,0});
-
-    auto endQT  = chrono::high_resolution_clock::now();
-
-    cout << "QuadTree nearest took " << chrono::duration_cast<chrono::microseconds>(endQT - startQT).count() << " ms\n";
-
-    //if wanted to print the closest point
-    // cout << "QuadTree closest point: (" << close.x << ", " << close.y << ")\n";
+    //Average query time over many runs (μs)
+    const int QT_RUNS = 1000;
+    auto qt_loop_start = Clock::now();
+    for (int i = 0; i < QT_RUNS; ++i) {
+        qt.closest(target, bestDist, {0,0});
+    }
+    auto qt_loop_end = Clock::now();
+    auto qt_avg_us = std::chrono::duration_cast<std::chrono::microseconds>(
+                         qt_loop_end - qt_loop_start
+                     ).count() / QT_RUNS;
+    std::cout << "QuadTree avg nearest query over "
+              << QT_RUNS << " runs: "
+              << qt_avg_us << " us\n\n";
 }
+
 // for finding the coordinates to the areas with the highest incident rate
 void getHigherIncidents(vector<FireIncident> incidents, int incidentThreshold){
     if (incidentThreshold <= 0){
