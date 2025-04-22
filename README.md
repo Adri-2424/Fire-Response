@@ -26,7 +26,7 @@ This project analyzes fire incident data using spatial data structures and provi
 2. Navigate to the file `main.cpp`.
 3. Run the code from the run tab without debugging and respond to the user prompts
    
-## 🧪 Running the the web APP (Flask)
+## 🧪 Running the web APP (Flask)
 
 1. Open a terminal in Visual Studio Code
 2. In the terminal enter the command: python app.py
