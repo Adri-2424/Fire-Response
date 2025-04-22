@@ -11,7 +11,7 @@
 #include <iomanip>
 #include "quadTree.cpp"
 
-//struct to intialize stuff for parsing for the columns in the csv
+//struct to initialize for parsing for the columns in the csv
 struct FireIncident {
     std::string id;
     double latitude;
@@ -48,7 +48,7 @@ std::vector<FireIncident> parseCSV(const std::string& filename) {
             continue;
         }
 
-        //parsing columns currently skipping date and time cause we dont need it rn
+        //parsing columns currently skipping date and time
         std::getline(ss, id, ',');
         for (int i = 0; i < 6; ++i) std::getline(ss, token, ','); // Skip Hour → Unit
         std::getline(ss, token, ','); lon = std::stod(token);     // Longitude
@@ -60,11 +60,11 @@ std::vector<FireIncident> parseCSV(const std::string& filename) {
 
         incidents.emplace_back(id, lat, lon, bLat, bLon, dist);
     }
-    //double check if loaded later lmao
+    //double check if loaded later
     return incidents;
 }
 
-//struct code modified from https://www.baeldung.com/cs/k-d-trees wbesite
+//struct code modified from https://www.baeldung.com/cs/k-d-trees website
 struct KDNode {
     FireIncident data;
     KDNode* left;
@@ -122,7 +122,7 @@ public:
                 other = node->left;
             }
 
-        //save the current best and make sure if the next best is better then replace it for best
+        //save the current best and make sure if the next best is better, then replace it for best
         best = nearest(next, lat, lon, depth + 1, best);
         double axis_diff = (axis == 0 ? lat - node->data.latitude : lon - node->data.longitude);
         if (std::abs(axis_diff) < best.distance)
@@ -178,7 +178,7 @@ void benchmark(const std::vector<FireIncident>& data) {
                    ).count();
     std::cout << "KDTree single nearest query took " << kd_q_ns << " ns\n";
 
-    //Average query time over many runs (microsecnds (μs)
+    //Average query time over many runs (microseconds (μs))
     const int KD_RUNS = 1000;
     auto kd_loop_start = Clock::now();
     for (int i = 0; i < KD_RUNS; ++i) {
@@ -192,7 +192,7 @@ void benchmark(const std::vector<FireIncident>& data) {
               << KD_RUNS << " runs: "
               << kd_avg_us << " us\n\n";
 
-    //QuadTree stuff
+    //QuadTree initialization
     Boundary boundary = {0, 0, 1000000, 1000000};
     QuadTree qt(boundary);
 
@@ -284,7 +284,7 @@ int main() {
 
     std::map<std::string, std::pair<double, double>> unit_coordinates;
 
-    //syntehsized locations of fire units
+    //synthesized locations of fire units
     unit_coordinates["E7"] = {29.700735771993592, -82.38651442738922};
     unit_coordinates["SQ3"] = {29.665023513467546, -82.29958933643647};
     unit_coordinates["E3"] = {29.66395757157737, -82.30181092608116};

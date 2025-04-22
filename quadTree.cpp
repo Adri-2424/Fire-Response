@@ -7,7 +7,7 @@ using namespace std;
 //basics of a quad tree
 /* Each node represents a neighborhood/area
  * 4 children: NE, NW, SE, SW or is a leaf node
- * these are smaller parts of the og neighborhood
+ * these are smaller parts of the orignal neighborhood
 */
 
 struct Point {
@@ -37,7 +37,7 @@ private:
     //Boundary of the node
     static const int capacity = 4;
 
-    //og area
+    //original area
     Boundary boundary;
     vector<Point> points;
     bool divided = false;
@@ -67,7 +67,7 @@ public:
         divided = true;
     }
 
-    // returns true if inserted false if else
+    // returns true if inserted false, if else
     bool insert(Point p){
         if (!boundary.contains(p)){
             return false;
@@ -78,6 +78,7 @@ public:
             return true;
         }
 
+        // divides so that there are always 4 children
         if (!divided){
             subdivide();
         }
