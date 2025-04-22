@@ -1,8 +1,3 @@
----
-title: "Fire Incident Analysis & Benchmarking Tool"
-output: github_document
----
-
 # 🔥 Fire Incident Analysis & Benchmarking Tool
 
 This project analyzes fire incident data using spatial data structures and provides a web-based UI for visualization and interaction. It consists of two main components:
