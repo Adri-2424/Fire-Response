@@ -131,7 +131,7 @@ public:
         return best;
     }
 
-    //find nearest using the distance formula and calculate its nearest point
+    //find nearest using the distance formula & calculate its nearest point
     void findNearestUnit(const FireIncident& nearestIncident, const std::map<std::string, std::pair<double, double>>& unit_coordinates) {
         std::string closestUnit;
         double minDist = std::numeric_limits<double>::max();

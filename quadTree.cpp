@@ -78,7 +78,7 @@ public:
             return true;
         }
 
-        // divides so that there are always 4 children
+        // divides for 4 children
         if (!divided){
             subdivide();
         }
