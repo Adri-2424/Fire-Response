@@ -7,7 +7,7 @@ using namespace std;
 //basics of a quad tree
 /* Each node represents a neighborhood/area
  * 4 children: NE, NW, SE, SW or is a leaf node
- * these are smaller parts of the orignal neighborhood
+ * these are smaller parts of the original neighborhood
 */
 
 struct Point {

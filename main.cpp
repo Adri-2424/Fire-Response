@@ -11,7 +11,7 @@
 #include <iomanip>
 #include "quadTree.cpp"
 
-//struct to initialize for parsing for the columns in the csv
+//struct to initialize for parsing for the columns into the csv
 struct FireIncident {
     std::string id;
     double latitude;
